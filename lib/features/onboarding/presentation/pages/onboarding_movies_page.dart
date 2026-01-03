@@ -5,6 +5,7 @@ import 'package:movie_app/app/di/di.dart';
 import 'package:movie_app/app/router/routes.dart';
 import 'package:movie_app/core/constants/app_constants.dart';
 import 'package:movie_app/core/constants/app_strings.dart';
+import 'package:movie_app/core/theme/app_colors.dart';
 import 'package:movie_app/core/theme/app_dimens.dart';
 import 'package:movie_app/core/widgets/movie_poster_card.dart';
 import 'package:movie_app/features/home/domain/entities/genre_entity.dart';
@@ -133,7 +134,7 @@ class _OnboardingMoviesPageState extends State<OnboardingMoviesPage> {
                         ),
                         color: Colors.transparent,
                         elevation: 10,
-                        shadowColor: Colors.black,
+                        shadowColor: AppColors.black,
                         child: Container(
                           color: Theme.of(context).colorScheme.surface,
                           padding: EdgeInsets.only(
