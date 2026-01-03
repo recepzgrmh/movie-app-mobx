@@ -26,7 +26,7 @@ class AppComponentThemes {
 
         backgroundColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.pressed)) return AppColors.redDark;
-          if (states.contains(WidgetState.disabled)) return AppColors.gray;
+          if (states.contains(WidgetState.disabled)) return AppColors.redDark;
           return AppColors.redLight;
         }),
 

@@ -1,9 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:movie_app/features/home/domain/entities/genre_entity.dart';
+import 'package:movie_app/features/home/domain/entities/movie_entity.dart';
 import 'package:movie_app/features/home/presentation/pages/home_page.dart';
+import 'package:movie_app/features/onboarding/presentation/pages/onboarding_genres_page.dart';
+import 'package:movie_app/features/onboarding/presentation/pages/onboarding_movies_page.dart';
+
 
 import '../../features/splash/presentation/pages/splash_page.dart';
 import 'routes.dart';
+
+/// Data class to pass onboarding data between routes
+class OnboardingRouteData {
+  final List<MovieEntity> movies;
+  final List<GenreEntity> genres;
+
+  OnboardingRouteData({required this.movies, required this.genres});
+}
 
 /// Application router configuration using go_router
 class AppRouter {
@@ -21,14 +34,18 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.onboarding,
         name: 'onboarding',
-        builder: (context, state) =>
-            const _PlaceholderPage(title: 'Onboarding - Movies'),
+        builder: (context, state) {
+          final data = state.extra as OnboardingRouteData;
+          return OnboardingMoviesPage(
+            initialMovies: data.movies,
+            initialGenres: data.genres,
+          );
+        },
       ),
       GoRoute(
         path: AppRoutes.onboardingGenres,
         name: 'onboarding-genres',
-        builder: (context, state) =>
-            const _PlaceholderPage(title: 'Onboarding - Genres'),
+        builder: (context, state) => const OnboardingGenresPage(),
       ),
       GoRoute(
         path: AppRoutes.paywall,
@@ -64,3 +81,6 @@ class _PlaceholderPage extends StatelessWidget {
     );
   }
 }
+
+
+
