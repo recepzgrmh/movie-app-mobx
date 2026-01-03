@@ -11,4 +11,6 @@ class AppColors {
 
   static const redDark = Color(0xFF8C2626);
   static const redLight = Color(0xFFCB2C2C);
+  
+  static const success = Color(0xFF00C853);
 }

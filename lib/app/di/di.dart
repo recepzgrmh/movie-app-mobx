@@ -15,8 +15,9 @@ import '../../features/home/domain/usecases/get_popular_movies_usecase.dart';
 
 // Presentation Layer - Stores
 import '../../features/onboarding/presentation/stores/onboarding_store.dart';
-
+import '../../features/paywall/presentation/stores/paywall_store.dart';
 import '../../features/splash/presentation/stores/splash_store.dart';
+import '../../features/home/presentation/stores/home_store.dart';
 
 final getIt = GetIt.instance;
 
@@ -65,12 +66,20 @@ void configureDependencies() {
     ),
   );
 
-
+  getIt.registerFactory<PaywallStore>(() => PaywallStore());
 
   // OnboardingStore as singleton - shared across onboarding screens
   getIt.registerLazySingleton<OnboardingStore>(
     () => OnboardingStore(
       getPopularMoviesUseCase: getIt<GetPopularMoviesUseCase>(),
+    ),
+  );
+
+  getIt.registerFactory<HomeStore>(
+    () => HomeStore(
+      getPopularMoviesUseCase: getIt<GetPopularMoviesUseCase>(),
+      getGenresUseCase: getIt<GetGenresUseCase>(),
+      getMoviesByGenreUseCase: getIt<GetMoviesByGenreUseCase>(),
     ),
   );
 }
