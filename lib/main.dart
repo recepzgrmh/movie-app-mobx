@@ -6,6 +6,7 @@ import 'app/di/di.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+  await initializeDependencies(); // Initialize async dependencies (SharedPreferences)
   configureDependencies();
   runApp(const App());
 }

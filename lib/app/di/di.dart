@@ -1,7 +1,9 @@
 import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Core
 import '../../core/network/network_manager.dart';
+import '../../core/services/local_storage_service.dart';
 
 // Data Layer
 import '../../features/home/data/datasources/movie_remote_data_source.dart';
@@ -20,6 +22,15 @@ import '../../features/splash/presentation/stores/splash_store.dart';
 import '../../features/home/presentation/stores/home_store.dart';
 
 final getIt = GetIt.instance;
+
+/// Initialize dependencies that require async initialization
+Future<void> initializeDependencies() async {
+  final prefs = await SharedPreferences.getInstance();
+  getIt.registerSingleton<SharedPreferences>(prefs);
+  getIt.registerLazySingleton<LocalStorageService>(
+    () => LocalStorageService(getIt<SharedPreferences>()),
+  );
+}
 
 void configureDependencies() {
   // ─────────────────────────────────────────────────────────────────────────────
@@ -73,6 +84,7 @@ void configureDependencies() {
   getIt.registerLazySingleton<OnboardingStore>(
     () => OnboardingStore(
       getPopularMoviesUseCase: getIt<GetPopularMoviesUseCase>(),
+      localStorageService: getIt<LocalStorageService>(),
     ),
   );
 
@@ -82,6 +94,7 @@ void configureDependencies() {
       getPopularMoviesUseCase: getIt<GetPopularMoviesUseCase>(),
       getGenresUseCase: getIt<GetGenresUseCase>(),
       getMoviesByGenreUseCase: getIt<GetMoviesByGenreUseCase>(),
+      localStorageService: getIt<LocalStorageService>(),
     ),
   );
 }
