@@ -218,6 +218,18 @@ mixin _$HomeStore on _HomeStore, Store {
   }
 
   @override
+  void personalizeForYou() {
+    final _$actionInfo = _$_HomeStoreActionController.startAction(
+      name: '_HomeStore.personalizeForYou',
+    );
+    try {
+      return super.personalizeForYou();
+    } finally {
+      _$_HomeStoreActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
   String toString() {
     return '''
 forYouMovies: ${forYouMovies},

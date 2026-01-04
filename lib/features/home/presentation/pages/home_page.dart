@@ -6,6 +6,7 @@ import '../../domain/entities/genre_entity.dart';
 import 'package:movie_app/core/theme/app_colors.dart';
 import 'package:movie_app/core/theme/app_dimens.dart';
 import 'package:movie_app/core/constants/app_strings.dart';
+import 'package:movie_app/core/widgets/error_view.dart';
 import 'package:movie_app/features/home/presentation/stores/home_store.dart';
 
 class HomePage extends StatefulWidget {
@@ -172,11 +173,11 @@ class _HomePageState extends State<HomePage> {
           }
 
           if (_homeStore.errorMessage != null && _homeStore.genres.isEmpty) {
-            return Center(
-              child: Text(
-                _homeStore.errorMessage!,
-                style: const TextStyle(color: AppColors.redLight),
-              ),
+            return ErrorView(
+              message: _homeStore.errorMessage,
+              onRetry: () {
+                _homeStore.fetchInitialData();
+              },
             );
           }
 
