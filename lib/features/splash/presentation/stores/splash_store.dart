@@ -1,4 +1,6 @@
 import 'package:mobx/mobx.dart';
+import 'package:movie_app/core/constants/app_constants.dart';
+import '../../../home/data/models/genre_model.dart';
 import '../../../home/domain/entities/genre_entity.dart';
 import '../../../home/domain/entities/movie_entity.dart';
 import '../../../home/domain/usecases/get_genres_usecase.dart';
@@ -65,6 +67,8 @@ abstract class _SplashStore with Store {
       // Fetch movies for all genres in parallel
       if (genres.isNotEmpty) {
         await _fetchAllCategoryMovies();
+        // Assign dynamic images to genres based on first movie poster
+        _assignGenreImages();
       }
 
       // Only mark as initialized if no errors
@@ -94,5 +98,41 @@ abstract class _SplashStore with Store {
     
     await Future.wait(futures);
   }
+
+  /// Assigns dynamic images to genres based on first movie poster from each category
+  @action
+  void _assignGenreImages() {
+    final updatedGenres = <GenreEntity>[];
+    
+    for (final genre in genres) {
+      final movies = moviesByCategory[genre.id];
+      String? imageUrl;
+      
+      // Get poster from first movie with a valid poster path
+      if (movies != null && movies.isNotEmpty) {
+        for (final movie in movies.take(5)) {
+          if (movie.posterPath.isNotEmpty) {
+            imageUrl = '${AppConstants.imageBaseUrl}${movie.posterPath}';
+            break;
+          }
+        }
+      }
+      
+      // Create updated genre with imageUrl
+      if (genre is GenreModel) {
+        updatedGenres.add(genre.copyWithImage(imageUrl));
+      } else {
+        updatedGenres.add(GenreEntity(
+          id: genre.id,
+          name: genre.name,
+          imageUrl: imageUrl,
+        ));
+      }
+    }
+    
+    genres.clear();
+    genres.addAll(updatedGenres);
+  }
 }
+
 

@@ -136,6 +136,23 @@ mixin _$SplashStore on _SplashStore, Store {
     );
   }
 
+  late final _$_SplashStoreActionController = ActionController(
+    name: '_SplashStore',
+    context: context,
+  );
+
+  @override
+  void _assignGenreImages() {
+    final _$actionInfo = _$_SplashStoreActionController.startAction(
+      name: '_SplashStore._assignGenreImages',
+    );
+    try {
+      return super._assignGenreImages();
+    } finally {
+      _$_SplashStoreActionController.endAction(_$actionInfo);
+    }
+  }
+
   @override
   String toString() {
     return '''

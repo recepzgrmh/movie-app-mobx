@@ -11,6 +11,7 @@ import 'package:movie_app/features/home/domain/entities/movie_entity.dart';
 import 'package:movie_app/features/home/presentation/stores/home_store.dart';
 import 'package:movie_app/core/theme/app_colors.dart';
 import 'package:movie_app/core/theme/app_dimens.dart';
+import 'package:movie_app/core/widgets/error_view.dart';
 import 'package:movie_app/features/splash/presentation/stores/splash_store.dart';
 
 class SplashPage extends StatefulWidget {
@@ -53,6 +54,9 @@ class _SplashPageState extends State<SplashPage> {
         ),
       );
 
+      // Personalize For You section based on saved genre preferences
+      homeStore.personalizeForYou();
+
       context.go(
         AppRoutes.onboarding,
         extra: OnboardingRouteData(
@@ -74,7 +78,6 @@ class _SplashPageState extends State<SplashPage> {
     });
   }
 
-  /// Precaches movie posters and genre images for onboarding screens
   Future<void> _precacheImages() async {
     final futures = <Future>[];
 
@@ -89,9 +92,47 @@ class _SplashPageState extends State<SplashPage> {
       }
     }
 
+    for (final genre in _store.genres) {
+      if (genre.imageUrl != null && genre.imageUrl!.isNotEmpty) {
+        futures.add(
+          precacheImage(
+            NetworkImage(genre.imageUrl!),
+            context,
+          ).catchError((_) {}),
+        );
+      }
+    }
+
+    for (final entry in _store.moviesByCategory.entries) {
+      final movies = entry.value;
+      for (final movie in movies.take(3)) {
+        if (movie.posterPath.isNotEmpty) {
+          futures.add(
+            precacheImage(
+              NetworkImage('${AppConstants.imageBaseUrl}${movie.posterPath}'),
+              context,
+            ).catchError((_) {}),
+          );
+        }
+      }
+    }
+
+    for (final movie in _store.popularMovies.take(10)) {
+      if (movie.posterPath.isNotEmpty) {
+        // Precache smaller size for circular avatars
+        futures.add(
+          precacheImage(
+            NetworkImage('https://image.tmdb.org/t/p/w200${movie.posterPath}'),
+            context,
+          ).catchError((_) {}),
+        );
+      }
+    }
+
+    // Wait with timeout to avoid blocking too long
     await Future.wait(
       futures,
-    ).timeout(const Duration(seconds: 5), onTimeout: () => []);
+    ).timeout(const Duration(seconds: 8), onTimeout: () => []);
   }
 
   @override
@@ -107,35 +148,48 @@ class _SplashPageState extends State<SplashPage> {
     final tt = theme.textTheme;
 
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const _AppLogoCard(),
-            const SizedBox(height: AppDimens.spacing24),
-            Text(
-              AppStrings.appName,
-              textAlign: TextAlign.center,
-              style: (tt.headlineLarge ?? const TextStyle()).copyWith(
-                fontSize: 36,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.2,
-              ),
-            ),
-            const SizedBox(height: AppDimens.spacing20),
-            Observer(
-              builder: (_) => AnimatedOpacity(
-                opacity: _store.isLoading ? 1 : 0,
-                duration: const Duration(milliseconds: 200),
-                child: const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+      body: Observer(
+        builder: (_) {
+          // Show error state with retry button
+          if (_store.errorMessage != null && !_store.isLoading) {
+            return ErrorView(
+              message: _store.errorMessage,
+              onRetry: () {
+                _store.init();
+              },
+            );
+          }
+
+          // Normal loading state
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const _AppLogoCard(),
+                const SizedBox(height: AppDimens.spacing24),
+                Text(
+                  AppStrings.appName,
+                  textAlign: TextAlign.center,
+                  style: (tt.headlineLarge ?? const TextStyle()).copyWith(
+                    fontSize: 36,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.2,
+                  ),
                 ),
-              ),
+                const SizedBox(height: AppDimens.spacing20),
+                AnimatedOpacity(
+                  opacity: _store.isLoading ? 1 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
