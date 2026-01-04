@@ -1,24 +1,23 @@
 import '../../domain/entities/genre_entity.dart';
 
-/// Data model for genre, extends the domain entity
 class GenreModel extends GenreEntity {
-  const GenreModel({
-    required super.id,
-    required super.name,
-  });
+  const GenreModel({required super.id, required super.name, super.imageUrl});
 
   factory GenreModel.fromJson(Map<String, dynamic> json) {
     return GenreModel(
       id: json['id'] ?? 0,
       name: json['name'] ?? '',
+      imageUrl: json['imageUrl'],
     );
   }
 
+  /// Create a copy with imageUrl
+  GenreModel copyWithImage(String? imageUrl) {
+    return GenreModel(id: id, name: name, imageUrl: imageUrl);
+  }
+
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-    };
+    return {'id': id, 'name': name, 'imageUrl': imageUrl};
   }
 }
 
