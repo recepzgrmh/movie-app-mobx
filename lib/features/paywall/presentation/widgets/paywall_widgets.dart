@@ -3,10 +3,30 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../stores/paywall_store.dart';
 
-class FeatureComparisonTable extends StatelessWidget {
+class FeatureComparisonTable extends StatefulWidget {
   final SubscriptionPlan selectedPlan;
 
   const FeatureComparisonTable({super.key, required this.selectedPlan});
+
+  @override
+  State<FeatureComparisonTable> createState() => _FeatureComparisonTableState();
+}
+
+class _FeatureComparisonTableState extends State<FeatureComparisonTable> {
+  static const double _rowHeight = 40.0;
+  
+  /// Get the row index where the first cross should appear in PRO column
+  /// Returns 4 (after last row) if all are checks (yearly)
+  int _getCrossStartRow(SubscriptionPlan plan) {
+    switch (plan) {
+      case SubscriptionPlan.weekly:
+        return 2; // Cross starts at Personalized (index 2)
+      case SubscriptionPlan.monthly:
+        return 3; // Cross starts at Ad-Free (index 3)
+      case SubscriptionPlan.yearly:
+        return 4; // No crosses visible (after last row)
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,18 +37,8 @@ class FeatureComparisonTable extends StatelessWidget {
       AppStrings.adFreeExperience,
     ];
 
-    // Determine availability based on plan
-    final isYearly = selectedPlan == SubscriptionPlan.yearly;
-
-    // True = Check, False = Cross.
-    // Index 0 is Free
-    // Index 1 is Pro
-    final availability = [
-      [true, true], // Daily Movie Suggestions
-      [false, true], // AI-Powered Movie Insights
-      [false, true], // Personalized Watchlists
-      [false, isYearly], // Ad-Free Experience (Only yearly has it checked)
-    ];
+    const freeAvailability = [true, false, false, false];
+    final crossStartRow = _getCrossStartRow(widget.selectedPlan);
 
     return IntrinsicHeight(
       child: Row(
@@ -39,16 +49,15 @@ class FeatureComparisonTable extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 40),
+                const SizedBox(height: _rowHeight),
                 ...List.generate(features.length, (index) {
                   return Container(
-                    height: 40,
+                    height: _rowHeight,
                     alignment: Alignment.centerLeft,
                     child: Text(
                       features[index],
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w500,
-
                         fontSize: 13,
                       ),
                     ),
@@ -64,7 +73,7 @@ class FeatureComparisonTable extends StatelessWidget {
             child: Column(
               children: [
                 SizedBox(
-                  height: 40,
+                  height: _rowHeight,
                   child: Center(
                     child: Text(
                       AppStrings.free,
@@ -77,9 +86,9 @@ class FeatureComparisonTable extends StatelessWidget {
                 ),
                 ...List.generate(features.length, (index) {
                   return SizedBox(
-                    height: 40,
+                    height: _rowHeight,
                     child: Center(
-                      child: _StatusIcon(isAvailable: availability[index][0]),
+                      child: _StaticIcon(isCheck: freeAvailability[index]),
                     ),
                   );
                 }),
@@ -89,7 +98,7 @@ class FeatureComparisonTable extends StatelessWidget {
 
           const SizedBox(width: 8),
 
-          // PRO Column (Bordered)
+          // PRO Column with animated sliding crosses
           Container(
             width: 60,
             decoration: BoxDecoration(
@@ -99,31 +108,90 @@ class FeatureComparisonTable extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               color: AppColors.redLight.withValues(alpha: 0.05),
             ),
-            child: Column(
-              children: [
-                // Header PRO
-                SizedBox(
-                  height: 40,
-                  child: Center(
-                    child: Text(
-                      AppStrings.pro,
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: AppColors.white,
-                        fontWeight: FontWeight.bold,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(11),
+              child: Stack(
+                children: [
+                  // Background column with header and check icons
+                  Column(
+                    children: [
+                      SizedBox(
+                        height: _rowHeight,
+                        child: Center(
+                          child: Text(
+                            AppStrings.pro,
+                            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                              color: AppColors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      // Check icons (always there, but covered by crosses when needed)
+                      ...List.generate(features.length, (index) {
+                        final isVisible = index < crossStartRow;
+                        return SizedBox(
+                          height: _rowHeight,
+                          child: Center(
+                            child: AnimatedOpacity(
+                              duration: const Duration(milliseconds: 300),
+                              opacity: isVisible ? 1.0 : 0.0,
+                              child: AnimatedScale(
+                                duration: const Duration(milliseconds: 300),
+                                scale: isVisible ? 1.0 : 0.5,
+                                curve: Curves.easeOutBack,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.success,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.success.withValues(alpha: 0.4),
+                                        blurRadius: 6,
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(Icons.check, size: 14, color: AppColors.black),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
                   ),
-                ),
-                // Icons
-                ...List.generate(features.length, (index) {
-                  return SizedBox(
-                    height: 40,
-                    child: Center(
-                      child: _StatusIcon(isAvailable: availability[index][1]),
-                    ),
-                  );
-                }),
-              ],
+                  
+                  // Sliding crosses overlay
+                  ...List.generate(2, (crossIndex) {
+                    // crossIndex 0 = first cross, crossIndex 1 = second cross
+                    final targetRow = crossStartRow + crossIndex;
+                    final isVisible = targetRow < 4; // Only show if within 4 rows
+                    
+                    return AnimatedPositioned(
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeInOutCubic,
+                      top: _rowHeight + (targetRow * _rowHeight) + (_rowHeight - 22) / 2,
+                      left: 0,
+                      right: 0,
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 300),
+                        opacity: isVisible ? 1.0 : 0.0,
+                        child: Center(
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: AppColors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.close, size: 14, color: AppColors.black),
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
+              ),
             ),
           ),
         ],
@@ -132,30 +200,25 @@ class FeatureComparisonTable extends StatelessWidget {
   }
 }
 
-class _StatusIcon extends StatelessWidget {
-  final bool isAvailable;
+/// Static icon (no animation)
+class _StaticIcon extends StatelessWidget {
+  final bool isCheck;
 
-  const _StatusIcon({required this.isAvailable});
+  const _StaticIcon({required this.isCheck});
 
   @override
   Widget build(BuildContext context) {
-    if (isAvailable) {
-      return Container(
-        padding: const EdgeInsets.all(4),
-        decoration: const BoxDecoration(
-          color: AppColors.success,
-          shape: BoxShape.circle,
-        ),
-        child: const Icon(Icons.check, size: 14, color: AppColors.black),
-      );
-    }
     return Container(
       padding: const EdgeInsets.all(4),
-      decoration: const BoxDecoration(
-        color: AppColors.white,
+      decoration: BoxDecoration(
+        color: isCheck ? AppColors.success : AppColors.white,
         shape: BoxShape.circle,
       ),
-      child: const Icon(Icons.close, size: 14, color: AppColors.black),
+      child: Icon(
+        isCheck ? Icons.check : Icons.close,
+        size: 14,
+        color: AppColors.black,
+      ),
     );
   }
 }

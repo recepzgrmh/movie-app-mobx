@@ -24,6 +24,10 @@ abstract class _PaywallStore with Store {
   @action
   void toggleFreeTrial(bool value) {
     isFreeTrialEnabled = value;
+    // Auto-select yearly plan when free trial is enabled
+    if (value) {
+      selectedPlan = SubscriptionPlan.yearly;
+    }
   }
 
   @action
