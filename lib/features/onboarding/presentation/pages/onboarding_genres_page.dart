@@ -35,10 +35,15 @@ class _OnboardingGenresPageState extends State<OnboardingGenresPage> {
       floatingActionButton: Observer(
         builder: (_) => ElevatedButton(
           onPressed: _store.canContinue
-              ? () {
+              ? () async {
+                  // Capture navigation before async gap
+                  final navigator = GoRouter.of(context);
+                  
+                  // Save selections to local storage for personalization
+                  await _store.saveSelectionsToStorage();
+                  
                   _store.setStep(OnboardingStep.paywall);
-                  // TODO: Save selections to local storage
-                  context.go(AppRoutes.paywall);
+                  navigator.go(AppRoutes.paywall);
                 }
               : null,
           child: Text(AppStrings.continueText),
@@ -102,7 +107,7 @@ class _OnboardingGenresPageState extends State<OnboardingGenresPage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           GenreCard(
-                            imageUrl: _getGenreImageUrl(genre.id),
+                            imageUrl: genre.imageUrl ?? _getFallbackGenreImage(genre.id),
                             isSelected: isSelected,
                             onTap: () => _store.toggleGenreSelection(genre),
                           ),
@@ -127,11 +132,9 @@ class _OnboardingGenresPageState extends State<OnboardingGenresPage> {
     );
   }
 
-  // Placeholder genre images
-  String _getGenreImageUrl(int genreId) {
-    // Map genre IDs to placeholder images
-
-    final genreImages = {
+  /// Fallback images for genres when dynamic image is not available
+  String _getFallbackGenreImage(int genreId) {
+    const fallbackImages = {
       28: 'https://image.tmdb.org/t/p/w500/d5NXSklXo0qyIYkgV94XAgMIckC.jpg', // Action
       12: 'https://image.tmdb.org/t/p/w500/rAiYTfKGqDCRIIqo664sY9XZIvQ.jpg', // Adventure
       16: 'https://image.tmdb.org/t/p/w500/qsdjk9oAKSQMWs0Vt5Pyfh6O4GZ.jpg', // Animation
@@ -139,27 +142,20 @@ class _OnboardingGenresPageState extends State<OnboardingGenresPage> {
       80: 'https://image.tmdb.org/t/p/w500/5HnIhj3iOKZIiBqpGL3GvOxoDMf.jpg', // Crime
       99: 'https://image.tmdb.org/t/p/w500/1YjdSym1jTG7xjHSI0yGGWEsw5i.jpg', // Documentary
       18: 'https://image.tmdb.org/t/p/w500/l0qVZIpXtIo7km9u5Yqh0nKPOr5.jpg', // Drama
-      10751:
-          'https://image.tmdb.org/t/p/w500/kBf3g9crrADGMc2AMAMlLBgSm2h.jpg', // Family
+      10751: 'https://image.tmdb.org/t/p/w500/kBf3g9crrADGMc2AMAMlLBgSm2h.jpg', // Family
       14: 'https://image.tmdb.org/t/p/w500/ygGmAO60t8GyqUo9xYeYxSZAR3b.jpg', // Fantasy
       36: 'https://image.tmdb.org/t/p/w500/sBp8EEWD1J1mvdbOl6Nt1kKAHO6.jpg', // History
       27: 'https://image.tmdb.org/t/p/w500/90ez6ArvpO8bvpyIngBuwXOqJm5.jpg', // Horror
-      10402:
-          'https://image.tmdb.org/t/p/w500/9rtrRGeRnL0JKtu9IMBWsmlmmZz.jpg', // Music
-      9648:
-          'https://image.tmdb.org/t/p/w500/7F8vH3hBJB6svEPBb3jKGJcq0Nw.jpg', // Mystery
-      10749:
-          'https://image.tmdb.org/t/p/w500/3Nz7SHdlVvY7g7ZY07Vw0WZC5Lx.jpg', // Romance
-      878:
-          'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg', // Sci-Fi
-      10770:
-          'https://image.tmdb.org/t/p/w500/rLb2cwF3Pazuxaj0sRXQ037tGI1.jpg', // TV Movie
+      10402: 'https://image.tmdb.org/t/p/w500/9rtrRGeRnL0JKtu9IMBWsmlmmZz.jpg', // Music
+      9648: 'https://image.tmdb.org/t/p/w500/7F8vH3hBJB6svEPBb3jKGJcq0Nw.jpg', // Mystery
+      10749: 'https://image.tmdb.org/t/p/w500/3Nz7SHdlVvY7g7ZY07Vw0WZC5Lx.jpg', // Romance
+      878: 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg', // Sci-Fi
+      10770: 'https://image.tmdb.org/t/p/w500/rLb2cwF3Pazuxaj0sRXQ037tGI1.jpg', // TV Movie
       53: 'https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg', // Thriller
-      10752:
-          'https://image.tmdb.org/t/p/w500/s5HTrIrAVQmQP5jijyBPPe9Rlqn.jpg', // War
+      10752: 'https://image.tmdb.org/t/p/w500/s5HTrIrAVQmQP5jijyBPPe9Rlqn.jpg', // War
       37: 'https://image.tmdb.org/t/p/w500/xKb6mtdfI5Qsggc44Hr9CCUDvAj.jpg', // Western
     };
-    return genreImages[genreId] ??
+    return fallbackImages[genreId] ??
         'https://image.tmdb.org/t/p/w500/d5NXSklXo0qyIYkgV94XAgMIckC.jpg';
   }
 }

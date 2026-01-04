@@ -1,5 +1,6 @@
 // lib/features/onboarding/presentation/stores/onboarding_store.dart
 import 'package:mobx/mobx.dart';
+import 'package:movie_app/core/services/local_storage_service.dart';
 import 'package:movie_app/features/home/domain/entities/genre_entity.dart';
 import 'package:movie_app/features/home/domain/entities/movie_entity.dart';
 import 'package:movie_app/features/home/domain/usecases/get_popular_movies_usecase.dart';
@@ -12,8 +13,12 @@ class OnboardingStore = _OnboardingStore with _$OnboardingStore;
 
 abstract class _OnboardingStore with Store {
   final GetPopularMoviesUseCase getPopularMoviesUseCase;
+  final LocalStorageService localStorageService;
 
-  _OnboardingStore({required this.getPopularMoviesUseCase});
+  _OnboardingStore({
+    required this.getPopularMoviesUseCase,
+    required this.localStorageService,
+  });
 
   static const int maxMoviesAllowed = 3;
   static const int maxGenresAllowed = 2;
@@ -144,6 +149,38 @@ abstract class _OnboardingStore with Store {
   // Helper to check if a genre is selected
   bool isGenreSelected(GenreEntity genre) {
     return selectedGenres.any((g) => g.id == genre.id);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Persistence
+  // ─────────────────────────────────────────────────────────────────────────────
+  
+  /// Save current selections to local storage for personalization
+  @action
+  Future<void> saveSelectionsToStorage() async {
+    final movieIds = selectedMovies.map((m) => m.id).toList();
+    final genreIds = selectedGenres.map((g) => g.id).toList();
+    
+    await localStorageService.saveSelectedMovieIds(movieIds);
+    await localStorageService.saveSelectedGenreIds(genreIds);
+    await localStorageService.setOnboardingCompleted(true);
+  }
+
+  /// Load saved selections from local storage
+  @action
+  void loadSelectionsFromStorage(List<MovieEntity> allMovies, List<GenreEntity> allGenres) {
+    final savedMovieIds = localStorageService.getSelectedMovieIds();
+    final savedGenreIds = localStorageService.getSelectedGenreIds();
+    
+    if (savedMovieIds.isNotEmpty) {
+      final movies = allMovies.where((m) => savedMovieIds.contains(m.id));
+      selectedMovies.addAll(movies);
+    }
+    
+    if (savedGenreIds.isNotEmpty) {
+      final genres = allGenres.where((g) => savedGenreIds.contains(g.id));
+      selectedGenres.addAll(genres);
+    }
   }
 }
 

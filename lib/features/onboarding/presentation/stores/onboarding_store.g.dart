@@ -168,6 +168,18 @@ mixin _$OnboardingStore on _OnboardingStore, Store {
     return _$loadMoreMoviesAsyncAction.run(() => super.loadMoreMovies());
   }
 
+  late final _$saveSelectionsToStorageAsyncAction = AsyncAction(
+    '_OnboardingStore.saveSelectionsToStorage',
+    context: context,
+  );
+
+  @override
+  Future<void> saveSelectionsToStorage() {
+    return _$saveSelectionsToStorageAsyncAction.run(
+      () => super.saveSelectionsToStorage(),
+    );
+  }
+
   late final _$_OnboardingStoreActionController = ActionController(
     name: '_OnboardingStore',
     context: context,
@@ -216,6 +228,21 @@ mixin _$OnboardingStore on _OnboardingStore, Store {
     );
     try {
       return super.setStep(value);
+    } finally {
+      _$_OnboardingStoreActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
+  void loadSelectionsFromStorage(
+    List<MovieEntity> allMovies,
+    List<GenreEntity> allGenres,
+  ) {
+    final _$actionInfo = _$_OnboardingStoreActionController.startAction(
+      name: '_OnboardingStore.loadSelectionsFromStorage',
+    );
+    try {
+      return super.loadSelectionsFromStorage(allMovies, allGenres);
     } finally {
       _$_OnboardingStoreActionController.endAction(_$actionInfo);
     }
