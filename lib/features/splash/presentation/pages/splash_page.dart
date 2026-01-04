@@ -6,6 +6,11 @@ import 'package:movie_app/app/di/di.dart';
 import 'package:movie_app/app/router/app_router.dart';
 import 'package:movie_app/app/router/routes.dart';
 import 'package:movie_app/core/constants/app_strings.dart';
+import 'package:movie_app/core/constants/app_constants.dart';
+import 'package:movie_app/features/home/domain/entities/movie_entity.dart';
+import 'package:movie_app/features/home/presentation/stores/home_store.dart';
+import 'package:movie_app/core/theme/app_colors.dart';
+import 'package:movie_app/core/theme/app_dimens.dart';
 import 'package:movie_app/features/splash/presentation/stores/splash_store.dart';
 
 class SplashPage extends StatefulWidget {
@@ -28,8 +33,26 @@ class _SplashPageState extends State<SplashPage> {
     _store = getIt<SplashStore>();
     _store.init();
 
-    _readyDisposer = reaction<bool>((_) => _store.isInitialized, (ready) {
+    _readyDisposer = reaction<bool>(((_) => _store.isInitialized), (
+      ready,
+    ) async {
       if (!ready || !mounted) return;
+
+      // Precache images for onboarding screens
+      await _precacheImages();
+
+      if (!mounted) return;
+
+      // Set data to HomeStore before navigation
+      final homeStore = getIt<HomeStore>();
+      homeStore.setInitialData(
+        popularMovies: _store.popularMovies.toList(),
+        genresList: _store.genres.toList(),
+        categoryMovies: Map<int, List<MovieEntity>>.from(
+          _store.moviesByCategory,
+        ),
+      );
+
       context.go(
         AppRoutes.onboarding,
         extra: OnboardingRouteData(
@@ -42,15 +65,33 @@ class _SplashPageState extends State<SplashPage> {
     _errorDisposer = reaction<String?>((_) => _store.errorMessage, (msg) {
       if (msg == null || !mounted) return;
 
-      final cs = Theme.of(context).colorScheme;
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: cs.error, // veya AppColors.redLight
-          content: Text(msg, style: TextStyle(color: cs.onError)),
+          backgroundColor: AppColors.redLight,
+          content: Text(msg, style: TextStyle(color: AppColors.white)),
         ),
       );
     });
+  }
+
+  /// Precaches movie posters and genre images for onboarding screens
+  Future<void> _precacheImages() async {
+    final futures = <Future>[];
+
+    for (final movie in _store.popularMovies.take(20)) {
+      if (movie.posterPath.isNotEmpty) {
+        futures.add(
+          precacheImage(
+            NetworkImage('${AppConstants.imageBaseUrl}${movie.posterPath}'),
+            context,
+          ).catchError((_) {}),
+        );
+      }
+    }
+
+    await Future.wait(
+      futures,
+    ).timeout(const Duration(seconds: 5), onTimeout: () => []);
   }
 
   @override
@@ -71,7 +112,7 @@ class _SplashPageState extends State<SplashPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const _AppLogoCard(),
-            const SizedBox(height: 26),
+            const SizedBox(height: AppDimens.spacing24),
             Text(
               AppStrings.appName,
               textAlign: TextAlign.center,
@@ -81,7 +122,7 @@ class _SplashPageState extends State<SplashPage> {
                 letterSpacing: 0.2,
               ),
             ),
-            const SizedBox(height: 22),
+            const SizedBox(height: AppDimens.spacing20),
             Observer(
               builder: (_) => AnimatedOpacity(
                 opacity: _store.isLoading ? 1 : 0,

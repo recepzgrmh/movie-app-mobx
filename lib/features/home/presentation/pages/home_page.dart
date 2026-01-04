@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:mobx/mobx.dart';
-import '../../../../app/di/di.dart';
+import 'package:movie_app/app/di/di.dart';
 import '../../domain/entities/genre_entity.dart';
 import 'package:movie_app/core/theme/app_colors.dart';
+import 'package:movie_app/core/theme/app_dimens.dart';
+import 'package:movie_app/core/constants/app_strings.dart';
 import 'package:movie_app/features/home/presentation/stores/home_store.dart';
 
 class HomePage extends StatefulWidget {
@@ -19,29 +21,45 @@ class _HomePageState extends State<HomePage> {
   final Map<int, GlobalKey> _sectionKeys = {};
   bool _isAutoScrolling = false;
   late ReactionDisposer _genresDisposer;
-  static const double _stickyHeaderOffset = 250.0;
+
+  static const double _forYouSectionHeight =
+      190.0; // Title + circle list + spacing
+  static const double _moviesHeaderHeight = 120.0; // Title + search + spacing
+  static const double _sectionHeaderHeight =
+      AppDimens.spacing60; // Genre title + spacing (24 + 24 + 12)
+  static const double _gridSpacing = AppDimens.spacing12;
 
   @override
   void initState() {
     super.initState();
     _homeStore = getIt<HomeStore>();
-    _homeStore.fetchInitialData();
 
-    // Create keys when genres are loaded
+    // Only fetch if data wasn't already loaded from splash
+    if (!_homeStore.isDataLoaded) {
+      _homeStore.fetchInitialData();
+    }
+
+    // Reaction to ensure keys are ready when genres load
     _genresDisposer = reaction((_) => _homeStore.genres.length, (length) {
-      setState(() {
-        for (int i = 0; i < length; i++) {
-          if (!_sectionKeys.containsKey(i)) {
-            _sectionKeys[i] = GlobalKey();
-          }
-        }
-      });
+      _ensureSectionKeys(length);
     });
 
     // Add scroll listener after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollController.addListener(_onScroll);
     });
+  }
+
+  /// Ensures section keys exist for all genres
+  void _ensureSectionKeys(int count) {
+    for (int i = 0; i < count; i++) {
+      _sectionKeys.putIfAbsent(i, () => GlobalKey());
+    }
+  }
+
+  /// Gets or creates a section key for the given index
+  GlobalKey _getSectionKey(int index) {
+    return _sectionKeys.putIfAbsent(index, () => GlobalKey());
   }
 
   @override
@@ -54,60 +72,88 @@ class _HomePageState extends State<HomePage> {
 
   void _onScroll() {
     if (_isAutoScrolling || _homeStore.genres.isEmpty) return;
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent) {
-      return;
-    }
 
-    // Find which section is currently visible
-    for (int i = 0; i < _homeStore.genres.length; i++) {
-      final key = _sectionKeys[i];
-      if (key?.currentContext == null) continue;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final currentIndex = _findCurrentCategoryIndex(
+      _scrollController.position.pixels,
+      screenWidth,
+    );
 
-      final RenderBox? renderBox =
-          key!.currentContext!.findRenderObject() as RenderBox?;
-
-      if (renderBox == null || !renderBox.attached) continue;
-
-      try {
-        final position = renderBox.localToGlobal(Offset.zero);
-        // Check if section is in view (considering sticky header constant)
-        if (position.dy <= _stickyHeaderOffset &&
-            position.dy >= -renderBox.size.height + _stickyHeaderOffset) {
-          if (_homeStore.selectedCategoryIndex != i) {
-            _homeStore.setSelectedCategoryIndex(i);
-          }
-          return;
-        }
-      } catch (e) {
-        debugPrint("Scroll error: $e");
-      }
+    if (_homeStore.selectedCategoryIndex != currentIndex) {
+      _homeStore.setSelectedCategoryIndex(currentIndex);
     }
   }
 
+  /// Calculates the scroll offset for a given category index
+  double _calculateScrollOffset(int index, double screenWidth) {
+    // Calculate single item height based on aspect ratio (2/3) and screen width
+
+    final availableWidth =
+        screenWidth -
+        (AppDimens.pagePaddingHorizontal * 2) -
+        (_gridSpacing * 2); // padding + spacing
+    final itemWidth = availableWidth / 3;
+    final itemHeight =
+        itemWidth * 1.5; // aspect ratio 2/3 means height = width * 1.5
+
+    // Grid height for 3 rows with spacing
+    final gridHeight = (itemHeight * 3) + (_gridSpacing * 2);
+
+    // Total section height
+    final sectionHeight = _sectionHeaderHeight + gridHeight;
+
+    // Base offset (For You + Movies Header)
+    final baseOffset = _forYouSectionHeight + _moviesHeaderHeight;
+
+    // Calculate offset for the target category
+    return baseOffset + (sectionHeight * index);
+  }
+
   Future<void> _scrollToCategory(int index) async {
-    if (!_sectionKeys.containsKey(index)) return;
+    if (index < 0 || index >= _homeStore.genres.length) return;
 
     _isAutoScrolling = true;
     _homeStore.setSelectedCategoryIndex(index);
 
-    final key = _sectionKeys[index];
-    if (key?.currentContext != null) {
-      try {
-        await Scrollable.ensureVisible(
-          key!.currentContext!,
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeInOut,
-          alignment: 0.1, // Offset for sticky header
-        );
-      } catch (e) {
-        debugPrint("Scroll to category error: $e");
-      }
-    }
+    final screenWidth = MediaQuery.of(context).size.width;
+    final targetOffset = _calculateScrollOffset(index, screenWidth);
+
+    // Clamp to max scroll extent
+    final maxScrollExtent = _scrollController.position.maxScrollExtent;
+    final clampedOffset = targetOffset.clamp(0.0, maxScrollExtent);
+
+    await _scrollController.animateTo(
+      clampedOffset,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeInOut,
+    );
 
     // Reset auto-scrolling flag with a small buffer
     await Future.delayed(const Duration(milliseconds: 50));
     _isAutoScrolling = false;
+  }
+
+  /// Finds the current category index based on scroll position
+  int _findCurrentCategoryIndex(double scrollPosition, double screenWidth) {
+    final baseOffset = _forYouSectionHeight + _moviesHeaderHeight;
+
+    if (scrollPosition < baseOffset) return 0;
+
+    if (scrollPosition < baseOffset) return 0;
+
+    final availableWidth =
+        screenWidth -
+        (AppDimens.pagePaddingHorizontal * 2) -
+        (_gridSpacing * 2);
+    final itemWidth = availableWidth / 3;
+    final itemHeight = itemWidth * 1.5;
+    final gridHeight = (itemHeight * 3) + (_gridSpacing * 2);
+    final sectionHeight = _sectionHeaderHeight + gridHeight;
+
+    final adjustedPosition = scrollPosition - baseOffset;
+    final index = (adjustedPosition / sectionHeight).floor();
+
+    return index.clamp(0, _homeStore.genres.length - 1);
   }
 
   @override
@@ -116,7 +162,10 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: AppColors.black,
       body: Observer(
         builder: (context) {
-          if (_homeStore.isLoading && _homeStore.genres.isEmpty) {
+          // Show loading until all data including category movies are loaded
+          if ((_homeStore.isLoading || _homeStore.isCategoryMoviesLoading) &&
+              (_homeStore.genres.isEmpty ||
+                  _homeStore.moviesByCategory.isEmpty)) {
             return const Center(
               child: CircularProgressIndicator(color: AppColors.redLight),
             );
@@ -147,11 +196,14 @@ class _HomePageState extends State<HomePage> {
                           child: Row(
                             children: [
                               Text(
-                                "For You ",
-                                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.white,
-                                  ),
+                                "${AppStrings.homeForYou} ",
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.white,
+                                    ),
                               ),
                               Text("⭐", style: TextStyle(fontSize: 24)),
                             ],
@@ -160,13 +212,17 @@ class _HomePageState extends State<HomePage> {
                         SizedBox(
                           height: 110,
                           child: ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppDimens.pagePaddingHorizontal,
+                            ),
                             scrollDirection: Axis.horizontal,
                             itemCount: _homeStore.forYouMovies.length,
                             itemBuilder: (context, index) {
                               final movie = _homeStore.forYouMovies[index];
                               return Container(
-                                margin: const EdgeInsets.only(right: 16),
+                                margin: const EdgeInsets.only(
+                                  right: AppDimens.spacing16,
+                                ),
                                 width: 90,
                                 height: 90,
                                 decoration: BoxDecoration(
@@ -185,7 +241,7 @@ class _HomePageState extends State<HomePage> {
                             },
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: AppDimens.spacing24),
                       ],
                     ),
                   ),
@@ -197,26 +253,31 @@ class _HomePageState extends State<HomePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16.0),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppDimens.pagePaddingHorizontal,
+                        ),
                         child: Row(
                           children: [
                             Text(
-                              "Movies ",
-                              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.white,
-                              ),
+                              "${AppStrings.homeMovies} ",
+                              style: Theme.of(context).textTheme.headlineLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.white,
+                                  ),
                             ),
                             Text("🎬", style: TextStyle(fontSize: 28)),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppDimens.spacing16),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppDimens.pagePaddingHorizontal,
+                        ),
                         child: TextField(
                           decoration: InputDecoration(
-                            hintText: "Search",
+                            hintText: AppStrings.homeSearchHint,
                             hintStyle: TextStyle(color: AppColors.grayDark),
                             prefixIcon: Icon(
                               Icons.search,
@@ -229,7 +290,7 @@ class _HomePageState extends State<HomePage> {
                             filled: true,
                             fillColor: AppColors.gray,
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30),
+                              borderRadius: BorderRadius.circular(10),
                               borderSide: BorderSide.none,
                             ),
                             contentPadding: const EdgeInsets.symmetric(
@@ -238,7 +299,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppDimens.spacing16),
                     ],
                   ),
                 ),
@@ -253,69 +314,68 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
 
-                SliverToBoxAdapter(
-                  child: Column(
-                    children: List.generate(_homeStore.genres.length, (index) {
-                      final genre = _homeStore.genres[index];
-                      final movies =
-                          _homeStore.moviesByCategory[genre.id]?.toList() ?? [];
+                // All Category Sections
+                SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final genre = _homeStore.genres[index];
+                    final movies = _homeStore.moviesByCategory[genre.id];
+                    final displayMovies = movies?.take(9).toList() ?? [];
 
-                      return Container(
-                        key: _sectionKeys[index],
-                        padding: const EdgeInsets.only(bottom: 24),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
-                              child: Text(
-                                genre.name,
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    return Container(
+                      key: _getSectionKey(index),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppDimens.pagePaddingHorizontal,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: AppDimens.spacing24),
+                          // Genre Header
+                          Text(
+                            genre.name,
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.white,
                                 ),
-                              ),
-                            ),
-                            SizedBox(
-                              height: 180,
-                              child: ListView.builder(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
+                          ),
+                          const SizedBox(height: AppDimens.spacing12),
+                          // Movie Grid (3x3)
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: displayMovies.length,
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 3,
+                                  crossAxisSpacing: _gridSpacing,
+                                  mainAxisSpacing: _gridSpacing,
+                                  childAspectRatio: 2 / 3,
                                 ),
-                                scrollDirection: Axis.horizontal,
-
-                                itemCount: movies.length > 9
-                                    ? 9
-                                    : movies.length,
-                                itemBuilder: (context, movieIndex) {
-                                  final movie = movies[movieIndex];
-                                  return Container(
-                                    margin: const EdgeInsets.only(right: 12),
-                                    width: 120,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.gray,
-                                      borderRadius: BorderRadius.circular(12),
-                                      image: movie.posterPath.isNotEmpty
-                                          ? DecorationImage(
-                                              image: NetworkImage(
-                                                'https://image.tmdb.org/t/p/w200${movie.posterPath}',
-                                              ),
-                                              fit: BoxFit.cover,
-                                            )
-                                          : null,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
-                  ),
+                            itemBuilder: (context, movieIndex) {
+                              final movie = displayMovies[movieIndex];
+                              return Container(
+                                decoration: BoxDecoration(
+                                  color: AppColors.gray,
+                                  borderRadius: BorderRadius.circular(
+                                    AppDimens.radiusMedium,
+                                  ),
+                                  image: movie.posterPath.isNotEmpty
+                                      ? DecorationImage(
+                                          image: NetworkImage(
+                                            'https://image.tmdb.org/t/p/w200${movie.posterPath}',
+                                          ),
+                                          fit: BoxFit.cover,
+                                        )
+                                      : null,
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  }, childCount: _homeStore.genres.length),
                 ),
 
                 SliverToBoxAdapter(
@@ -358,9 +418,11 @@ class _CategoryTabsDelegate extends SliverPersistentHeaderDelegate {
   ) {
     return Container(
       color: AppColors.black,
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: AppDimens.paddingSmall),
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimens.pagePaddingHorizontal,
+        ),
         scrollDirection: Axis.horizontal,
         itemCount: genres.length,
         itemBuilder: (context, index) {
@@ -369,17 +431,24 @@ class _CategoryTabsDelegate extends SliverPersistentHeaderDelegate {
           return GestureDetector(
             onTap: () => onCategoryTap(index),
             child: Container(
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              margin: const EdgeInsets.only(right: AppDimens.spacing8),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDimens.spacing20,
+                vertical: 10,
+              ),
               decoration: BoxDecoration(
                 color: isSelected ? AppColors.redLight : AppColors.gray,
-                borderRadius: BorderRadius.circular(25),
+                borderRadius: BorderRadius.circular(AppDimens.radiusXLarge),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (isSelected) ...[
-                    const Icon(Icons.check, color: AppColors.white, size: 16),
+                    const Icon(
+                      Icons.check,
+                      color: AppColors.white,
+                      size: AppDimens.iconSmall,
+                    ),
                     const SizedBox(width: 6),
                   ],
                   Text(

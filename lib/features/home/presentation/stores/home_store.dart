@@ -38,7 +38,32 @@ abstract class _HomeStore with Store {
   bool isLoading = false;
 
   @observable
+  bool isCategoryMoviesLoading = false;
+
+  @observable
+  bool isDataLoaded = false;
+
+  @observable
   String? errorMessage;
+
+  /// Sets initial data from splash screen to avoid re-fetching
+  @action
+  void setInitialData({
+    required List<MovieEntity> popularMovies,
+    required List<GenreEntity> genresList,
+    required Map<int, List<MovieEntity>> categoryMovies,
+  }) {
+    if (isDataLoaded) return; // Already loaded, skip
+    
+    forYouMovies = ObservableList.of(popularMovies);
+    genres = ObservableList.of(genresList);
+    
+    for (final entry in categoryMovies.entries) {
+      moviesByCategory[entry.key] = ObservableList.of(entry.value);
+    }
+    
+    isDataLoaded = true;
+  }
 
   @action
   Future<void> fetchInitialData() async {
@@ -60,15 +85,18 @@ abstract class _HomeStore with Store {
       // Fetch Genres
       final genresResult = await _getGenresUseCase();
       genresResult.when(
-        success: (data) async {
+        success: (data) {
           genres = ObservableList.of(data);
-          // Fetch movies for all genres
-          await _fetchAllCategoryMovies();
         },
         error: (failure) {
           errorMessage = failure.message;
         },
       );
+
+      // Fetch movies for all genres (parallel loading)
+      if (genres.isNotEmpty) {
+        await _fetchAllCategoryMovies();
+      }
     } catch (e) {
       errorMessage = e.toString();
     } finally {
@@ -78,7 +106,10 @@ abstract class _HomeStore with Store {
 
   @action
   Future<void> _fetchAllCategoryMovies() async {
-    for (final genre in genres) {
+    isCategoryMoviesLoading = true;
+    
+    // Fetch all categories in parallel for faster loading
+    final futures = genres.map((genre) async {
       final result = await _getMoviesByGenreUseCase(genre.id);
       result.when(
         success: (data) {
@@ -88,7 +119,10 @@ abstract class _HomeStore with Store {
           // Silently ignore errors for individual categories
         },
       );
-    }
+    });
+    
+    await Future.wait(futures);
+    isCategoryMoviesLoading = false;
   }
 
   @action

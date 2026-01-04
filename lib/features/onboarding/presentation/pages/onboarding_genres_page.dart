@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:movie_app/app/di/di.dart';
 import 'package:movie_app/app/router/routes.dart';
 import 'package:movie_app/core/constants/app_strings.dart';
+import 'package:movie_app/core/theme/app_dimens.dart';
 import 'package:movie_app/core/widgets/genre_card.dart';
 import 'package:movie_app/features/onboarding/presentation/stores/onboarding_store.dart';
 
@@ -45,11 +46,16 @@ class _OnboardingGenresPageState extends State<OnboardingGenresPage> {
       ),
       body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: .start,
           children: [
             // Header
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+              padding: const EdgeInsets.fromLTRB(
+                AppDimens.pagePaddingHorizontal,
+                AppDimens.spacing60,
+                AppDimens.pagePaddingHorizontal,
+                AppDimens.spacing16,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -57,7 +63,7 @@ class _OnboardingGenresPageState extends State<OnboardingGenresPage> {
                     AppStrings.onboardingGenresTitle,
                     style: tt.headlineMedium,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppDimens.spacing8),
                   Observer(
                     builder: (_) => Text(
                       '${AppStrings.onboardingGenresSubtitle} ${AppStrings.onboardingGenresSelected(_store.selectedGenres.length)}',
@@ -75,39 +81,44 @@ class _OnboardingGenresPageState extends State<OnboardingGenresPage> {
             // Genre Grid
             Expanded(
               child: Observer(
-                builder: (_) => GridView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 1,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                  ),
-                  itemCount: _store.availableGenres.length,
-                  itemBuilder: (context, index) {
-                    final genre = _store.availableGenres[index];
-                    final isSelected = _store.isGenreSelected(genre);
+                builder: (_) {
+                  // Force MobX to observe selectedGenres changes
+                  final _ = _store.selectedGenres.length;
+                  
+                  return GridView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: AppDimens.pagePaddingHorizontal),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 1,
+                      crossAxisSpacing: AppDimens.spacing16,
+                      mainAxisSpacing: AppDimens.spacing16,
+                    ),
+                    itemCount: _store.availableGenres.length,
+                    itemBuilder: (context, index) {
+                      final genre = _store.availableGenres[index];
+                      final isSelected = _store.selectedGenres.any((g) => g.id == genre.id);
 
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        GenreCard(
-                          imageUrl: _getGenreImageUrl(genre.id),
-                          isSelected: isSelected,
-                          onTap: () => _store.toggleGenreSelection(genre),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          genre.name,
-                          style: tt.bodyMedium,
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    );
-                  },
-                ),
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          GenreCard(
+                            imageUrl: _getGenreImageUrl(genre.id),
+                            isSelected: isSelected,
+                            onTap: () => _store.toggleGenreSelection(genre),
+                          ),
+                          const SizedBox(height: AppDimens.spacing8),
+                          Text(
+                            genre.name,
+                            style: tt.bodyMedium,
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ],

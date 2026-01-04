@@ -20,6 +20,11 @@ class AppStrings {
   static const String loading = 'Loading...';
   static const String continueText = 'Continue';
 
+  // Home Page
+  static const String homeForYou = 'For You';
+  static const String homeMovies = 'Movies';
+  static const String homeSearchHint = 'Search';
+
   // Onboarding - Movies
   static const String onboardingMoviesTitle = 'Select Your Favorite Movies';
   static const String onboardingMoviesSubtitle = 'Choose up to 3 movies';

@@ -100,6 +100,46 @@ mixin _$HomeStore on _HomeStore, Store {
     });
   }
 
+  late final _$isCategoryMoviesLoadingAtom = Atom(
+    name: '_HomeStore.isCategoryMoviesLoading',
+    context: context,
+  );
+
+  @override
+  bool get isCategoryMoviesLoading {
+    _$isCategoryMoviesLoadingAtom.reportRead();
+    return super.isCategoryMoviesLoading;
+  }
+
+  @override
+  set isCategoryMoviesLoading(bool value) {
+    _$isCategoryMoviesLoadingAtom.reportWrite(
+      value,
+      super.isCategoryMoviesLoading,
+      () {
+        super.isCategoryMoviesLoading = value;
+      },
+    );
+  }
+
+  late final _$isDataLoadedAtom = Atom(
+    name: '_HomeStore.isDataLoaded',
+    context: context,
+  );
+
+  @override
+  bool get isDataLoaded {
+    _$isDataLoadedAtom.reportRead();
+    return super.isDataLoaded;
+  }
+
+  @override
+  set isDataLoaded(bool value) {
+    _$isDataLoadedAtom.reportWrite(value, super.isDataLoaded, () {
+      super.isDataLoaded = value;
+    });
+  }
+
   late final _$errorMessageAtom = Atom(
     name: '_HomeStore.errorMessage',
     context: context,
@@ -146,6 +186,26 @@ mixin _$HomeStore on _HomeStore, Store {
   );
 
   @override
+  void setInitialData({
+    required List<MovieEntity> popularMovies,
+    required List<GenreEntity> genresList,
+    required Map<int, List<MovieEntity>> categoryMovies,
+  }) {
+    final _$actionInfo = _$_HomeStoreActionController.startAction(
+      name: '_HomeStore.setInitialData',
+    );
+    try {
+      return super.setInitialData(
+        popularMovies: popularMovies,
+        genresList: genresList,
+        categoryMovies: categoryMovies,
+      );
+    } finally {
+      _$_HomeStoreActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
   void setSelectedCategoryIndex(int index) {
     final _$actionInfo = _$_HomeStoreActionController.startAction(
       name: '_HomeStore.setSelectedCategoryIndex',
@@ -165,6 +225,8 @@ genres: ${genres},
 moviesByCategory: ${moviesByCategory},
 selectedCategoryIndex: ${selectedCategoryIndex},
 isLoading: ${isLoading},
+isCategoryMoviesLoading: ${isCategoryMoviesLoading},
+isDataLoaded: ${isDataLoaded},
 errorMessage: ${errorMessage}
     ''';
   }

@@ -18,31 +18,67 @@ class GenreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const borderWidth = AppDimens.selectedBorderWidth;
+
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: AppDimens.genreCardSize,
-        height: AppDimens.genreCardSize,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: isSelected
-              ? Border.all(
-                  color: AppColors.redDark,
-                  width: AppDimens.selectedBorderWidth,
-                )
-              : null,
-        ),
-        child: ClipOval(
-          child:
-              child ??
-              Image.network(
-                imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  color: AppColors.gray,
-                  child: const Icon(Icons.category, color: AppColors.grayDark),
+      child: SizedBox(
+        width: AppDimens.genreCardSize + 8, // Extra space for checkmark
+        height: AppDimens.genreCardSize + 8,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // Main circular card with border
+            Container(
+              width: AppDimens.genreCardSize,
+              height: AppDimens.genreCardSize,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: isSelected
+                    ? Border.all(color: AppColors.redLight, width: borderWidth)
+                    : null,
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(isSelected ? borderWidth : 0),
+                child: ClipOval(
+                  child:
+                      child ??
+                      Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        width: AppDimens.genreCardSize,
+                        height: AppDimens.genreCardSize,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: AppColors.gray,
+                          child: const Icon(
+                            Icons.category,
+                            color: AppColors.grayDark,
+                          ),
+                        ),
+                      ),
                 ),
               ),
+            ),
+            // Checkmark indicator at bottom right
+            if (isSelected)
+              Positioned(
+                right: 16,
+                bottom: 12,
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: const BoxDecoration(
+                    color: AppColors.redLight,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check,
+                    color: AppColors.white,
+                    size: 18,
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );

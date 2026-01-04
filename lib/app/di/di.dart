@@ -63,6 +63,7 @@ void configureDependencies() {
     () => SplashStore(
       getPopularMoviesUseCase: getIt<GetPopularMoviesUseCase>(),
       getGenresUseCase: getIt<GetGenresUseCase>(),
+      getMoviesByGenreUseCase: getIt<GetMoviesByGenreUseCase>(),
     ),
   );
 
@@ -75,7 +76,8 @@ void configureDependencies() {
     ),
   );
 
-  getIt.registerFactory<HomeStore>(
+  // HomeStore as singleton - data is shared and persisted across navigation
+  getIt.registerLazySingleton<HomeStore>(
     () => HomeStore(
       getPopularMoviesUseCase: getIt<GetPopularMoviesUseCase>(),
       getGenresUseCase: getIt<GetGenresUseCase>(),

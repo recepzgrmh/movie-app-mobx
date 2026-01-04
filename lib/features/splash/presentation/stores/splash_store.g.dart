@@ -96,6 +96,24 @@ mixin _$SplashStore on _SplashStore, Store {
     });
   }
 
+  late final _$moviesByCategoryAtom = Atom(
+    name: '_SplashStore.moviesByCategory',
+    context: context,
+  );
+
+  @override
+  ObservableMap<int, List<MovieEntity>> get moviesByCategory {
+    _$moviesByCategoryAtom.reportRead();
+    return super.moviesByCategory;
+  }
+
+  @override
+  set moviesByCategory(ObservableMap<int, List<MovieEntity>> value) {
+    _$moviesByCategoryAtom.reportWrite(value, super.moviesByCategory, () {
+      super.moviesByCategory = value;
+    });
+  }
+
   late final _$initAsyncAction = AsyncAction(
     '_SplashStore.init',
     context: context,
@@ -106,6 +124,18 @@ mixin _$SplashStore on _SplashStore, Store {
     return _$initAsyncAction.run(() => super.init());
   }
 
+  late final _$_fetchAllCategoryMoviesAsyncAction = AsyncAction(
+    '_SplashStore._fetchAllCategoryMovies',
+    context: context,
+  );
+
+  @override
+  Future<void> _fetchAllCategoryMovies() {
+    return _$_fetchAllCategoryMoviesAsyncAction.run(
+      () => super._fetchAllCategoryMovies(),
+    );
+  }
+
   @override
   String toString() {
     return '''
@@ -113,7 +143,8 @@ isLoading: ${isLoading},
 isInitialized: ${isInitialized},
 errorMessage: ${errorMessage},
 popularMovies: ${popularMovies},
-genres: ${genres}
+genres: ${genres},
+moviesByCategory: ${moviesByCategory}
     ''';
   }
 }
