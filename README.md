@@ -3,9 +3,10 @@
 A Flutter **case-study** TMDB Movie App built with **Clean Architecture + MobX**.
 
 ## Demo
-📽️ **application.mp4:** [Watch / Download](./application.mp4)
 
-<video src="./application.mp4" controls muted playsinline style="max-width: 20%;"></video>
+📽️ **App demo:**  
+[▶️ Watch / Download](https://github.com/user-attachments/assets/9e326950-4dd5-4207-80a0-039eb2be275c)
+
 
 ## Completed
 - [x] Clean Architecture (Data / Domain / Presentation)
