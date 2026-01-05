@@ -13,6 +13,9 @@ class AppStrings {
   static const String networkError = 'No internet connection.';
   static const String timeoutError = 'Request timed out. Please try again.';
 
+  //
+  static const String nextStep = "Continue to next step 👉";
+
   // Common
   static const String ok = 'OK';
   static const String cancel = 'Cancel';
@@ -26,14 +29,15 @@ class AppStrings {
   static const String homeSearchHint = 'Search';
 
   // Onboarding - Movies
-  static const String onboardingMoviesTitle = 'Select Your Favorite Movies';
-  static const String onboardingMoviesSubtitle = 'Choose up to 3 movies';
-  static String onboardingMoviesSelected(int count) => '($count/3 selected)';
+  static const String onboardingMoviesTitle = 'Welcome';
+  static const String onboardingMoviesSubtitle = 'Choose your 3 favorite movies';
+  static const String onboardingMoviesTitleCompleted = 'Continue to next step 👉';
 
   // Onboarding - Genres
-  static const String onboardingGenresTitle = 'Select Categories';
-  static const String onboardingGenresSubtitle = 'Choose up to 2 categories';
-  static String onboardingGenresSelected(int count) => '($count/2 selected)';
+  static const String onboardingGenresTitle = 'Welcome';
+  static const String onboardingGenresSubtitle = 'Choose your 2 favorite genres';
+  static const String onboardingGenresTitleCompleted = 'Thank you 👍';
+
   // Paywall - General
   static const String enableFreeTrial = 'Enable Free Trial';
   static const String restorePurchase = 'Restore Purchase';
@@ -69,4 +73,3 @@ class AppStrings {
   static String pricePerYear(String price) => '$price / year';
   static String onlyPricePerWeek(String price) => 'Only $price per week';
 }
-

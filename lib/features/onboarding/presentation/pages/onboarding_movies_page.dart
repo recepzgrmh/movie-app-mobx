@@ -9,6 +9,7 @@ import 'package:movie_app/core/constants/app_strings.dart';
 import 'package:movie_app/core/theme/app_dimens.dart';
 import 'package:movie_app/core/theme/app_colors.dart';
 import 'package:movie_app/core/widgets/movie_poster_card.dart';
+import 'package:movie_app/core/theme/app_typography.dart';
 import 'package:movie_app/features/home/domain/entities/genre_entity.dart';
 import 'package:movie_app/features/home/domain/entities/movie_entity.dart';
 import 'package:movie_app/features/onboarding/presentation/stores/onboarding_store.dart';
@@ -85,13 +86,22 @@ class _OnboardingMoviesPageState extends State<OnboardingMoviesPage> {
           children: [
             // Header
             Observer(
-              builder: (_) => PageHeader(
-                title: AppStrings.onboardingMoviesTitle,
-                subtitle: AppStrings.onboardingMoviesSubtitle,
-                highlightedText: AppStrings.onboardingMoviesSelected(
-                  _store.selectedMovies.length,
-                ),
-              ),
+              builder: (_) {
+                final isCompleted = _store.selectedMovies.length >= 3;
+                return PageHeader(
+                  title: isCompleted
+                      ? AppStrings.onboardingMoviesTitleCompleted
+                      : AppStrings.onboardingMoviesTitle,
+                  subtitle: isCompleted
+                      ? ' '
+                      : AppStrings.onboardingMoviesSubtitle,
+                  titleStyle: AppTypography.onboardingTitle,
+                  subtitleStyle: AppTypography.onboardingSubtitle.copyWith(
+                    color: isCompleted ? Colors.transparent : null,
+                  ),
+                  textAlign: .start,
+                );
+              },
             ),
 
             // Movie Carousel

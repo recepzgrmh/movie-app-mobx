@@ -169,7 +169,7 @@ class _SplashPageState extends State<SplashPage> {
                 const SizedBox(height: AppDimens.spacing24),
                 Text(
                   AppStrings.appName,
-                  textAlign: TextAlign.center,
+                  textAlign: .center,
                   style: (tt.headlineLarge ?? const TextStyle()).copyWith(
                     fontSize: 36,
                     fontWeight: FontWeight.w800,

@@ -107,7 +107,25 @@ class AppTypography {
     fontSize: 16,
     fontWeight: FontWeight.w400,
     letterSpacing: 0,
-    height: 1.0, // Figma line height 100%
+    height: 1.0,
+  );
+
+  static const onboardingTitle = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 24,
+    fontWeight: FontWeight.w700,
+    fontStyle: FontStyle.normal,
+    height: 1.0,
+    letterSpacing: 0,
+  );
+
+  static const onboardingSubtitle = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 20,
+    fontWeight: FontWeight.w500,
+    fontStyle: FontStyle.normal,
+    height: 1.0,
+    letterSpacing: 0,
   );
 
   static TextTheme textTheme(ColorScheme scheme) {

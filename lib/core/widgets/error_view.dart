@@ -19,9 +19,7 @@ class ErrorView extends StatelessWidget {
   });
 
   /// Factory constructor for network errors
-  factory ErrorView.network({
-    VoidCallback? onRetry,
-  }) {
+  factory ErrorView.network({VoidCallback? onRetry}) {
     return ErrorView(
       message: AppStrings.networkError,
       onRetry: onRetry,
@@ -30,9 +28,7 @@ class ErrorView extends StatelessWidget {
   }
 
   /// Factory constructor for timeout errors
-  factory ErrorView.timeout({
-    VoidCallback? onRetry,
-  }) {
+  factory ErrorView.timeout({VoidCallback? onRetry}) {
     return ErrorView(
       message: AppStrings.timeoutError,
       onRetry: onRetry,
@@ -58,11 +54,7 @@ class ErrorView extends StatelessWidget {
                 color: AppColors.redLight.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                size: 40,
-                color: AppColors.redLight,
-              ),
+              child: Icon(icon, size: 40, color: AppColors.redLight),
             ),
             const SizedBox(height: AppDimens.spacing24),
 
@@ -79,7 +71,7 @@ class ErrorView extends StatelessWidget {
             // Error Message
             Text(
               message ?? AppStrings.genericError,
-              textAlign: TextAlign.center,
+              textAlign: .center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppColors.grayDark,
               ),
@@ -102,7 +94,9 @@ class ErrorView extends StatelessWidget {
                       vertical: AppDimens.spacing16,
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppDimens.radiusMedium),
+                      borderRadius: BorderRadius.circular(
+                        AppDimens.radiusMedium,
+                      ),
                     ),
                   ),
                 ),
@@ -119,11 +113,7 @@ class InlineErrorView extends StatelessWidget {
   final String? message;
   final VoidCallback? onRetry;
 
-  const InlineErrorView({
-    super.key,
-    this.message,
-    this.onRetry,
-  });
+  const InlineErrorView({super.key, this.message, this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -133,9 +123,7 @@ class InlineErrorView extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.redLight.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppDimens.radiusMedium),
-        border: Border.all(
-          color: AppColors.redLight.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: AppColors.redLight.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -148,10 +136,7 @@ class InlineErrorView extends StatelessWidget {
           Expanded(
             child: Text(
               message ?? AppStrings.genericError,
-              style: TextStyle(
-                color: AppColors.white,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: AppColors.white, fontSize: 14),
             ),
           ),
           if (onRetry != null)
