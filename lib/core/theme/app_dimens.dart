@@ -30,12 +30,20 @@ class AppDimens {
 
   // Standard Spacings
   static const spacing4 = 4.0;
+  static const spacing6 = 6.0;
   static const spacing8 = 8.0;
+  static const spacing10 = 10.0;
   static const spacing12 = 12.0;
+  static const spacing14 = 14.0;
+  static const spacing15 = 15.0;
   static const spacing16 = 16.0;
+  static const spacing18 = 18.0;
   static const spacing20 = 20.0;
+  static const spacing22 = 22.0;
   static const spacing24 = 24.0;
+  static const spacing26 = 26.0;
   static const spacing32 = 32.0;
+  static const spacing42 = 42.0;
   static const spacing60 = 60.0; // Header spacing
 
   // Paddings
