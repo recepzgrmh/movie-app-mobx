@@ -8,6 +8,7 @@ import 'package:movie_app/core/theme/app_dimens.dart';
 import 'package:movie_app/core/constants/app_strings.dart';
 import 'package:movie_app/core/widgets/error_view.dart';
 import 'package:movie_app/features/home/presentation/stores/home_store.dart';
+import 'package:movie_app/core/widgets/movie_poster_card.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -355,21 +356,12 @@ class _HomePageState extends State<HomePage> {
                                 ),
                             itemBuilder: (context, movieIndex) {
                               final movie = displayMovies[movieIndex];
-                              return Container(
-                                decoration: BoxDecoration(
-                                  color: AppColors.gray,
-                                  borderRadius: BorderRadius.circular(
-                                    AppDimens.radiusMedium,
-                                  ),
-                                  image: movie.posterPath.isNotEmpty
-                                      ? DecorationImage(
-                                          image: NetworkImage(
-                                            'https://image.tmdb.org/t/p/w200${movie.posterPath}',
-                                          ),
-                                          fit: BoxFit.cover,
-                                        )
-                                      : null,
-                                ),
+                              return MoviePosterCard(
+                                imageUrl:
+                                    'https://image.tmdb.org/t/p/w200${movie.posterPath}',
+                                width: double.infinity,
+
+                                height: double.infinity,
                               );
                             },
                           ),
