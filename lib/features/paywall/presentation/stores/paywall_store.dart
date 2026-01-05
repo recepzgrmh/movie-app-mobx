@@ -1,4 +1,6 @@
 import 'package:mobx/mobx.dart';
+import '../../domain/entities/paywall_config.dart';
+import '../../domain/usecases/get_paywall_config_usecase.dart';
 
 part 'paywall_store.g.dart';
 
@@ -7,6 +9,11 @@ enum SubscriptionPlan { weekly, monthly, yearly }
 class PaywallStore = _PaywallStore with _$PaywallStore;
 
 abstract class _PaywallStore with Store {
+
+  final GetPaywallConfigUseCase getPaywallConfigUseCase;
+
+  _PaywallStore({required this.getPaywallConfigUseCase});
+
   @observable
   SubscriptionPlan selectedPlan = SubscriptionPlan.yearly;
 
@@ -15,6 +22,24 @@ abstract class _PaywallStore with Store {
 
   @observable
   bool isLoading = false;
+
+  @observable
+  PaywallConfig? config;
+
+  @computed
+  PaywallVariant get activeVariant => config?.variant ?? PaywallVariant.variantA;
+
+  @action
+  Future<void> loadConfig() async {
+    isLoading = true;
+    try {
+      config = await getPaywallConfigUseCase();
+    } catch (_) {
+      // Fallback is handled by activeVariant getter (returns variantA if config is null)
+    } finally {
+      isLoading = false;
+    }
+  }
 
   @action
   void selectPlan(SubscriptionPlan plan) {

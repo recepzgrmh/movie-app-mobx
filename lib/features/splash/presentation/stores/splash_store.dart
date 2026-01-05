@@ -1,11 +1,14 @@
 import 'package:mobx/mobx.dart';
 import 'package:movie_app/core/constants/app_constants.dart';
+import 'package:movie_app/core/result/result.dart';
 import '../../../home/data/models/genre_model.dart';
 import '../../../home/domain/entities/genre_entity.dart';
 import '../../../home/domain/entities/movie_entity.dart';
 import '../../../home/domain/usecases/get_genres_usecase.dart';
 import '../../../home/domain/usecases/get_movies_by_genre_usecase.dart';
 import '../../../home/domain/usecases/get_popular_movies_usecase.dart';
+
+import '../../../paywall/domain/usecases/get_paywall_config_usecase.dart';
 
 part 'splash_store.g.dart';
 
@@ -15,11 +18,13 @@ abstract class _SplashStore with Store {
   final GetPopularMoviesUseCase getPopularMoviesUseCase;
   final GetGenresUseCase getGenresUseCase;
   final GetMoviesByGenreUseCase getMoviesByGenreUseCase;
+  final GetPaywallConfigUseCase getPaywallConfigUseCase;
 
   _SplashStore({
     required this.getPopularMoviesUseCase,
     required this.getGenresUseCase,
     required this.getMoviesByGenreUseCase,
+    required this.getPaywallConfigUseCase,
   });
 
   @observable
@@ -46,21 +51,22 @@ abstract class _SplashStore with Store {
     errorMessage = null;
 
     try {
-      // Fetch popular movies and genres in parallel
+      // Fetch popular movies, genres AND paywall config in parallel
       final results = await Future.wait([
         getPopularMoviesUseCase(),
         getGenresUseCase(),
+        getPaywallConfigUseCase(), // Prefetch paywall config
       ]);
 
       // Handle movies result
-      results[0].when(
-        success: (data) => popularMovies.addAll(data as List<MovieEntity>),
+      (results[0] as Result<List<MovieEntity>>).when(
+        success: (data) => popularMovies.addAll(data),
         error: (failure) => errorMessage = failure.message,
       );
 
       // Handle genres result
-      results[1].when(
-        success: (data) => genres.addAll(data as List<GenreEntity>),
+      (results[1] as Result<List<GenreEntity>>).when(
+        success: (data) => genres.addAll(data),
         error: (failure) => errorMessage ??= failure.message,
       );
 

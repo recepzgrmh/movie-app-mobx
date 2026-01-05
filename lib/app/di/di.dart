@@ -15,6 +15,10 @@ import '../../features/home/domain/usecases/get_genres_usecase.dart';
 import '../../features/home/domain/usecases/get_movies_by_genre_usecase.dart';
 import '../../features/home/domain/usecases/get_popular_movies_usecase.dart';
 
+import '../../features/paywall/data/repositories/paywall_config_repository_impl.dart';
+import '../../features/paywall/domain/repositories/paywall_config_repository.dart';
+import '../../features/paywall/domain/usecases/get_paywall_config_usecase.dart';
+
 // Presentation Layer - Stores
 import '../../features/onboarding/presentation/stores/onboarding_store.dart';
 import '../../features/paywall/presentation/stores/paywall_store.dart';
@@ -52,6 +56,10 @@ void configureDependencies() {
     () => MovieRepositoryImpl(getIt<MovieRemoteDataSource>()),
   );
 
+  getIt.registerLazySingleton<PaywallConfigRepository>(
+    () => PaywallConfigRepositoryImpl(),
+  );
+
   // ─────────────────────────────────────────────────────────────────────────────
   // DOMAIN LAYER - Use Cases
   // ─────────────────────────────────────────────────────────────────────────────
@@ -66,6 +74,9 @@ void configureDependencies() {
   getIt.registerLazySingleton<GetMoviesByGenreUseCase>(
     () => GetMoviesByGenreUseCase(getIt<MovieRepository>()),
   );
+  getIt.registerLazySingleton<GetPaywallConfigUseCase>(
+    () => GetPaywallConfigUseCase(getIt<PaywallConfigRepository>()),
+  );
 
   // ─────────────────────────────────────────────────────────────────────────────
   // PRESENTATION LAYER - Stores
@@ -75,10 +86,15 @@ void configureDependencies() {
       getPopularMoviesUseCase: getIt<GetPopularMoviesUseCase>(),
       getGenresUseCase: getIt<GetGenresUseCase>(),
       getMoviesByGenreUseCase: getIt<GetMoviesByGenreUseCase>(),
+      getPaywallConfigUseCase: getIt<GetPaywallConfigUseCase>(),
     ),
   );
 
-  getIt.registerFactory<PaywallStore>(() => PaywallStore());
+  getIt.registerFactory<PaywallStore>(
+    () => PaywallStore(
+      getPaywallConfigUseCase: getIt<GetPaywallConfigUseCase>(),
+    ),
+  );
 
   // OnboardingStore as singleton - shared across onboarding screens
   getIt.registerLazySingleton<OnboardingStore>(
