@@ -1,7 +1,18 @@
+
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../stores/paywall_store.dart';
+import 'package:movie_app/core/widgets/selection_indicator.dart';
+import '../../../../core/theme/app_dimens.dart';
+
+EdgeInsets paywallBottomPadding(double Function(double) s) =>
+    EdgeInsets.only(
+      left: s(AppDimens.spacing16),
+      right: s(AppDimens.spacing16),
+      top: s(AppDimens.spacing16),
+      bottom: s(AppDimens.spacing32),
+    );
 
 class FeatureComparisonTable extends StatefulWidget {
   final SubscriptionPlan selectedPlan;
@@ -40,6 +51,9 @@ class _FeatureComparisonTableState extends State<FeatureComparisonTable> {
     const freeAvailability = [true, false, false, false];
     final crossStartRow = _getCrossStartRow(widget.selectedPlan);
 
+    final scale = MediaQuery.sizeOf(context).width / 375.0;
+    double s(double v) => v * scale;
+
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -49,16 +63,17 @@ class _FeatureComparisonTableState extends State<FeatureComparisonTable> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: _rowHeight),
+                SizedBox(height: s(_rowHeight)),
                 ...List.generate(features.length, (index) {
                   return Container(
-                    height: _rowHeight,
+                    height: s(_rowHeight),
                     alignment: Alignment.centerLeft,
                     child: Text(
                       features[index],
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        fontSize: s(AppDimens.spacing14),
+                        fontFamily: 'Inter',
                       ),
                     ),
                   );
@@ -69,26 +84,28 @@ class _FeatureComparisonTableState extends State<FeatureComparisonTable> {
 
           // FREE Column
           SizedBox(
-            width: 60,
+            width: s(AppDimens.spacing60),
             child: Column(
               children: [
                 SizedBox(
-                  height: _rowHeight,
+                  height: s(_rowHeight),
                   child: Center(
                     child: Text(
                       AppStrings.free,
                       style: Theme.of(context).textTheme.labelLarge?.copyWith(
                         color: AppColors.white.withValues(alpha: 0.7),
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
+                        fontSize: s(AppDimens.spacing16),
+                        fontFamily: 'Inter',
                       ),
                     ),
                   ),
                 ),
                 ...List.generate(features.length, (index) {
                   return SizedBox(
-                    height: _rowHeight,
+                    height: s(_rowHeight),
                     child: Center(
-                      child: _StaticIcon(isCheck: freeAvailability[index]),
+                      child: _StaticIcon(isCheck: freeAvailability[index], s: s),
                     ),
                   );
                 }),
@@ -96,33 +113,35 @@ class _FeatureComparisonTableState extends State<FeatureComparisonTable> {
             ),
           ),
 
-          const SizedBox(width: 8),
+          SizedBox(width: s(AppDimens.spacing8)),
 
           // PRO Column with animated sliding crosses
           Container(
-            width: 60,
+            width: s(AppDimens.spacing60),
             decoration: BoxDecoration(
               border: Border.all(
                 color: AppColors.redLight.withValues(alpha: 0.8),
               ),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(s(AppDimens.radiusMedium)),
               color: AppColors.redLight.withValues(alpha: 0.05),
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(11),
+              borderRadius: BorderRadius.circular(s(11)),
               child: Stack(
                 children: [
                   // Background column with header and check icons
                   Column(
                     children: [
                       SizedBox(
-                        height: _rowHeight,
+                        height: s(_rowHeight),
                         child: Center(
                           child: Text(
                             AppStrings.pro,
                             style: Theme.of(context).textTheme.labelLarge?.copyWith(
                               color: AppColors.white,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
+                              fontSize: s(AppDimens.spacing16),
+                              fontFamily: 'Inter',
                             ),
                           ),
                         ),
@@ -131,7 +150,7 @@ class _FeatureComparisonTableState extends State<FeatureComparisonTable> {
                       ...List.generate(features.length, (index) {
                         final isVisible = index < crossStartRow;
                         return SizedBox(
-                          height: _rowHeight,
+                          height: s(_rowHeight),
                           child: Center(
                             child: AnimatedOpacity(
                               duration: const Duration(milliseconds: 300),
@@ -141,18 +160,18 @@ class _FeatureComparisonTableState extends State<FeatureComparisonTable> {
                                 scale: isVisible ? 1.0 : 0.5,
                                 curve: Curves.easeOutBack,
                                 child: Container(
-                                  padding: const EdgeInsets.all(4),
+                                  padding: EdgeInsets.all(s(AppDimens.spacing4)),
                                   decoration: BoxDecoration(
                                     color: AppColors.success,
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
                                         color: AppColors.success.withValues(alpha: 0.4),
-                                        blurRadius: 6,
+                                        blurRadius: s(AppDimens.spacing6),
                                       ),
                                     ],
                                   ),
-                                  child: const Icon(Icons.check, size: 14, color: AppColors.black),
+                                  child: Icon(Icons.check, size: s(AppDimens.spacing14), color: AppColors.black),
                                 ),
                               ),
                             ),
@@ -171,7 +190,7 @@ class _FeatureComparisonTableState extends State<FeatureComparisonTable> {
                     return AnimatedPositioned(
                       duration: const Duration(milliseconds: 400),
                       curve: Curves.easeInOutCubic,
-                      top: _rowHeight + (targetRow * _rowHeight) + (_rowHeight - 22) / 2,
+                      top: s(_rowHeight) + (targetRow * s(_rowHeight)) + (s(_rowHeight) - s(AppDimens.spacing22)) / 2,
                       left: 0,
                       right: 0,
                       child: AnimatedOpacity(
@@ -179,12 +198,12 @@ class _FeatureComparisonTableState extends State<FeatureComparisonTable> {
                         opacity: isVisible ? 1.0 : 0.0,
                         child: Center(
                           child: Container(
-                            padding: const EdgeInsets.all(4),
+                            padding: EdgeInsets.all(s(AppDimens.spacing4)),
                             decoration: const BoxDecoration(
                               color: AppColors.white,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.close, size: 14, color: AppColors.black),
+                            child: Icon(Icons.close, size: s(AppDimens.spacing14), color: AppColors.black),
                           ),
                         ),
                       ),
@@ -203,20 +222,21 @@ class _FeatureComparisonTableState extends State<FeatureComparisonTable> {
 /// Static icon (no animation)
 class _StaticIcon extends StatelessWidget {
   final bool isCheck;
+  final double Function(double) s;
 
-  const _StaticIcon({required this.isCheck});
+  const _StaticIcon({required this.isCheck, required this.s});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: EdgeInsets.all(s(AppDimens.spacing4)),
       decoration: BoxDecoration(
         color: isCheck ? AppColors.success : AppColors.white,
         shape: BoxShape.circle,
       ),
       child: Icon(
         isCheck ? Icons.check : Icons.close,
-        size: 14,
+        size: s(AppDimens.spacing14),
         color: AppColors.black,
       ),
     );
@@ -244,6 +264,9 @@ class SubscriptionOptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scale = MediaQuery.sizeOf(context).width / 375.0;
+    double s(double v) => v * scale;
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -251,48 +274,62 @@ class SubscriptionOptionCard extends StatelessWidget {
           onTap: onTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.all(16),
+            height: s(AppDimens.spacing60),
+            padding: EdgeInsets.symmetric(horizontal: s(AppDimens.spacing20)),
             decoration: BoxDecoration(
               color: AppColors.black,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(s(AppDimens.radiusMedium)),
               border: Border.all(
                 color: isSelected ? AppColors.redLight : AppColors.grayDark,
-                width: isSelected ? 2 : 1,
+                width: s(1),
               ),
             ),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Radio Indicator
-                _RadioIndicator(isSelected: isSelected),
-                const SizedBox(width: 16),
-
-                // Titles
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                // Left side: Radio + Titles
+                Expanded(
+                  child: Row(
+                    children: [
+                      SelectionIndicator(isSelected: isSelected, size: s(AppDimens.spacing24)),
+                      SizedBox(width: s(AppDimens.spacing16)),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: s(AppDimens.spacing16),
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                            SizedBox(height: s(AppDimens.spacing4)),
+                            Text(
+                              priceSub,
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodySmall?.copyWith(
+                                color: AppColors.gray,
+                                fontFamily: 'Inter',
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      priceSub,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(color: AppColors.gray),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-
-                const Spacer(),
 
                 // Price
                 Text(
                   priceMain,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
+                    fontSize: s(AppDimens.spacing16),
+                    fontFamily: 'Inter',
                   ),
                 ),
               ],
@@ -303,24 +340,26 @@ class SubscriptionOptionCard extends StatelessWidget {
         // Best Value Badge
         if (isBestValue)
           Positioned(
-            top: -12,
+            top: -s(AppDimens.spacing12),
             right: 0,
             left: 0,
             child: Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
+                padding: EdgeInsets.symmetric(
+                  horizontal: s(AppDimens.spacing12),
+                  vertical: s(AppDimens.spacing4),
                 ),
                 decoration: BoxDecoration(
                   color: AppColors.redLight,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(s(AppDimens.radiusMedium)),
                 ),
                 child: Text(
                   AppStrings.bestValue,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: AppColors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w500,
+                    fontSize: s(AppDimens.spacing12),
+                    fontFamily: 'Inter',
                   ),
                 ),
               ),
@@ -331,28 +370,35 @@ class SubscriptionOptionCard extends StatelessWidget {
   }
 }
 
-class _RadioIndicator extends StatelessWidget {
-  final bool isSelected;
+class PaywallFooterLink extends StatelessWidget {
+  final String text;
+  final VoidCallback onTap;
+  final TextStyle? style;
 
-  const _RadioIndicator({required this.isSelected});
+  const PaywallFooterLink({super.key, required this.text, required this.onTap, this.style});
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      width: 24,
-      height: 24,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: isSelected ? AppColors.redLight : AppColors.gray,
-          width: 2,
-        ),
-        color: isSelected ? AppColors.redLight : Colors.transparent,
+    return GestureDetector(
+      onTap: onTap,
+      child: Builder(
+        builder: (context) {
+          final scale = MediaQuery.sizeOf(context).width / 375.0;
+          double s(double v) => v * scale;
+
+          return Text(
+            text,
+            style:
+                style ??
+                Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: AppColors.gray,
+                  fontSize: s(AppDimens.spacing8),
+                  fontWeight: FontWeight.w400,
+                  fontFamily: 'Inter',
+                ),
+          );
+        },
       ),
-      child: isSelected
-          ? const Icon(Icons.check, size: 16, color: AppColors.white)
-          : null,
     );
   }
 }
