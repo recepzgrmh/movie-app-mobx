@@ -11,12 +11,16 @@ class MoviePosterCard extends StatelessWidget {
     this.isSelected = false,
     this.onTap,
     this.child,
+    this.width,
+    this.height,
   });
 
   final String imageUrl;
   final bool isSelected;
   final VoidCallback? onTap;
   final Widget? child;
+  final double? width;
+  final double? height;
 
   @override
   Widget build(BuildContext context) {
@@ -34,8 +38,8 @@ class MoviePosterCard extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
-        width: AppDimens.posterWidth,
-        height: AppDimens.posterHeight,
+        width: width ?? AppDimens.posterWidth,
+        height: height ?? AppDimens.posterHeight,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppRadius.poster),
         ),
