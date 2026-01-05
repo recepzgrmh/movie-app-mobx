@@ -6,6 +6,7 @@ import 'package:movie_app/app/router/routes.dart';
 import 'package:movie_app/core/constants/app_strings.dart';
 import 'package:movie_app/core/theme/app_dimens.dart';
 import 'package:movie_app/core/widgets/genre_card.dart';
+import 'package:movie_app/core/widgets/page_header.dart';
 import 'package:movie_app/features/onboarding/presentation/stores/onboarding_store.dart';
 
 class OnboardingGenresPage extends StatefulWidget {
@@ -54,32 +55,13 @@ class _OnboardingGenresPageState extends State<OnboardingGenresPage> {
           crossAxisAlignment: .start,
           children: [
             // Header
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppDimens.pagePaddingHorizontal,
-                AppDimens.spacing60,
-                AppDimens.pagePaddingHorizontal,
-                AppDimens.spacing16,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppStrings.onboardingGenresTitle,
-                    style: tt.headlineMedium,
-                  ),
-                  const SizedBox(height: AppDimens.spacing8),
-                  Observer(
-                    builder: (_) => Text(
-                      '${AppStrings.onboardingGenresSubtitle} ${AppStrings.onboardingGenresSelected(_store.selectedGenres.length)}',
-                      style: tt.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.7,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+            Observer(
+              builder: (_) => PageHeader(
+                title: AppStrings.onboardingGenresTitle,
+                subtitle: AppStrings.onboardingGenresSubtitle,
+                highlightedText: AppStrings.onboardingGenresSelected(
+                  _store.selectedGenres.length,
+                ),
               ),
             ),
 

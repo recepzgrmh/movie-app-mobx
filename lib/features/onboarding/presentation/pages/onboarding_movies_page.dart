@@ -12,6 +12,8 @@ import 'package:movie_app/core/widgets/movie_poster_card.dart';
 import 'package:movie_app/features/home/domain/entities/genre_entity.dart';
 import 'package:movie_app/features/home/domain/entities/movie_entity.dart';
 import 'package:movie_app/features/onboarding/presentation/stores/onboarding_store.dart';
+import 'package:movie_app/core/widgets/custom_page_indicator.dart';
+import 'package:movie_app/core/widgets/page_header.dart';
 import 'dart:math' as math;
 
 class OnboardingMoviesPage extends StatefulWidget {
@@ -41,10 +43,7 @@ class _OnboardingMoviesPageState extends State<OnboardingMoviesPage> {
     // Initialize store with data from splash
     _store.initWithData(widget.initialMovies, widget.initialGenres);
 
-    _pageController = PageController(
-      viewportFraction: 0.55, // Yan kartların görünme oranı
-      initialPage: 0,
-    );
+    _pageController = PageController(viewportFraction: 0.55, initialPage: 0);
 
     _pageController.addListener(() {
       setState(() {
@@ -67,9 +66,6 @@ class _OnboardingMoviesPageState extends State<OnboardingMoviesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final tt = theme.textTheme;
-
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: Observer(
@@ -88,30 +84,13 @@ class _OnboardingMoviesPageState extends State<OnboardingMoviesPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppDimens.pagePaddingHorizontal,
-                vertical: AppDimens.pagePaddingVertical,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppStrings.onboardingMoviesTitle,
-                    style: tt.headlineMedium,
-                  ),
-                  const SizedBox(height: AppDimens.spacing8),
-                  Observer(
-                    builder: (_) => Text(
-                      '${AppStrings.onboardingMoviesSubtitle} ${AppStrings.onboardingMoviesSelected(_store.selectedMovies.length)}',
-                      style: tt.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.7,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+            Observer(
+              builder: (_) => PageHeader(
+                title: AppStrings.onboardingMoviesTitle,
+                subtitle: AppStrings.onboardingMoviesSubtitle,
+                highlightedText: AppStrings.onboardingMoviesSelected(
+                  _store.selectedMovies.length,
+                ),
               ),
             ),
 
@@ -155,7 +134,6 @@ class _OnboardingMoviesPageState extends State<OnboardingMoviesPage> {
 
               final movie = _store.availableMovies[index];
 
-              // Observer ile sarmalayarak MobX değişikliklerini anında yansıtıyoruz
               return Observer(
                 builder: (_) {
                   final isSelected = _store.isMovieSelected(movie);
@@ -200,7 +178,9 @@ class _OnboardingMoviesPageState extends State<OnboardingMoviesPage> {
             transform: Matrix4.identity()
               ..setEntry(3, 2, 0.001) // Perspective
               ..rotateY(rotation)
-              ..multiply(Matrix4.diagonal3Values(scale, scale, scale)), // Uniform scale
+              ..multiply(
+                Matrix4.diagonal3Values(scale, scale, scale),
+              ), // Uniform scale
             child: Opacity(
               opacity: opacity,
               child: GestureDetector(
@@ -215,23 +195,23 @@ class _OnboardingMoviesPageState extends State<OnboardingMoviesPage> {
                     _store.toggleMovieSelection(movie);
                   }
                 },
-                  child: Container(
-                    width: itemWidth,
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: AppDimens.spacing12,
-                      vertical: AppDimens.spacing20,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(AppDimens.radiusLarge),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.black.withValues(alpha: 0.3),
-                          blurRadius: 20 * scale,
-                          spreadRadius: 5 * scale,
-                          offset: Offset(0, 10 * scale),
-                        ),
-                      ],
-                    ),
+                child: Container(
+                  width: itemWidth,
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: AppDimens.spacing12,
+                    vertical: AppDimens.spacing20,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppDimens.radiusLarge),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.black.withValues(alpha: 0.3),
+                        blurRadius: 20 * scale,
+                        spreadRadius: 5 * scale,
+                        offset: Offset(0, 10 * scale),
+                      ),
+                    ],
+                  ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(AppDimens.radiusLarge),
                     child: MoviePosterCard(
@@ -251,39 +231,9 @@ class _OnboardingMoviesPageState extends State<OnboardingMoviesPage> {
   }
 
   Widget _buildPageIndicators() {
-    final visibleCount = math.min(5, _store.availableMovies.length);
-    final currentIndex = _currentPage.round();
-
-    return Center(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(visibleCount, (index) {
-          // Show indicators for current position ± 2
-          final actualIndex = currentIndex - 2 + index;
-
-          if (actualIndex < 0 || actualIndex >= _store.availableMovies.length) {
-            return const SizedBox.shrink();
-          }
-
-          final isActive = actualIndex == currentIndex;
-          final distance = (actualIndex - _currentPage).abs();
-
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            margin: const EdgeInsets.symmetric(horizontal: AppDimens.spacing4),
-            width: isActive ? 24 : 8,
-            height: 8,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(4),
-              color: isActive
-                  ? AppColors.redLight
-                  : AppColors.redLight.withValues(
-                      alpha: math.max(0.2, 1 - distance * 0.3),
-                    ),
-            ),
-          );
-        }),
-      ),
+    return CustomPageIndicator(
+      itemCount: _store.availableMovies.length,
+      currentPage: _currentPage,
     );
   }
 }
