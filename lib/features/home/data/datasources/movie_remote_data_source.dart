@@ -21,7 +21,31 @@ class MovieRemoteDataSourceImpl implements MovieRemoteDataSource {
         '/movie/popular',
         queryParameters: {'page': page},
       );
-      return MovieResponseModel.fromJson(response.data);
+
+      // Transforming V1 "results" to V2 "data.items" with renamed fields
+      final v1Results = response.data['results'] as List;
+      final v2Simulation = {
+        'meta': {'status': 'success'},
+        'data': {
+          'items': v1Results
+              .map(
+                (m) => {
+                  'id': m['id'],
+                  'name': m['title'], // Renamed from title
+                  'cover_url': m['poster_path'], // Renamed from poster_path
+                  'rating': m['vote_average'], // Renamed from vote_average
+                  'summary': m['overview'], // Renamed from overview
+
+                  'backdrop_path': m['backdrop_path'],
+                  'release_date': m['release_date'],
+                  'genre_ids': m['genre_ids'],
+                },
+              )
+              .toList(),
+        },
+      };
+
+      return MovieResponseModel.fromJson(v2Simulation);
     } on DioException catch (e) {
       throw Exception(e.message);
     }
@@ -38,14 +62,14 @@ class MovieRemoteDataSourceImpl implements MovieRemoteDataSource {
   }
 
   @override
-  Future<MovieResponseModel> getMoviesByGenre(int genreId, {int page = 1}) async {
+  Future<MovieResponseModel> getMoviesByGenre(
+    int genreId, {
+    int page = 1,
+  }) async {
     try {
       final response = await networkManager.service.get(
         '/discover/movie',
-        queryParameters: {
-          'with_genres': genreId,
-          'page': page,
-        },
+        queryParameters: {'with_genres': genreId, 'page': page},
       );
       return MovieResponseModel.fromJson(response.data);
     } on DioException catch (e) {
@@ -53,4 +77,3 @@ class MovieRemoteDataSourceImpl implements MovieRemoteDataSource {
     }
   }
 }
-
