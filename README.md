@@ -1,23 +1,28 @@
 # movie-app-mobx
 
-A Flutter **case-study scaffold** for a TMDB Movie App.
+A Flutter **case-study** TMDB Movie App built with **Clean Architecture + MobX**.
 
-> Current status: **project structure + dependencies set up** (no features implemented yet).
+## Demo
+📽️ **application.mp4:** [Watch / Download](./application.mp4)
 
-## Goals
-- Provide a solid starter for:
-  - **Clean Architecture** (Data / Domain / Presentation)
-  - **MobX** state management
-  - **TMDB API** integration
-  - Resilience patterns (errors, retries, timeouts, etc.)
+<video src="./application.mp4" controls muted playsinline style="max-width: 20%;"></video>
 
-## Current Progress
-- [x] Folder structure created (`app / core / features`)
-- [x] Dependencies added
-- [ ] TMDB networking layer
-- [ ] Feature implementations (splash, onboarding, paywall, home)
-- [ ] Flavors: dev / staging / prod
-- [ ] Paywall A/B variants
+## Completed
+- [x] Clean Architecture (Data / Domain / Presentation)
+- [x] MobX state management (Stores)
+- [x] DI with GetIt
+- [x] Networking (Dio + interceptors)
+- [x] Navigation (GoRouter)
+- [x] Splash: fetch popular movies + genres + paywall config (parallel)
+- [x] Onboarding: movie selection + infinite scroll
+- [x] Onboarding: genre selection logic
+- [x] Paywall: A/B variants supported via config
+- [x] Home: “For You” + category feed
+- [x] Home: Spy-scroll (sticky tabs synced with scroll position)
+
+## To Do (Bonus Challenges)
+- [ ] Flavors: **dev / staging / prod** (separate entrypoints + icons + endpoints)
+- [ ] CI/CD documentation (README improvements)
 
 ## Project Structure
 ```
@@ -51,13 +56,3 @@ lib/
       └─ presentation/
 
 ``` 
-
-## Planned
-- Build flavors (**dev / staging / prod**)
-- Paywall with **A/B testing variants**
-- Offline/cache strategy
-- CI + basic tests
-
-## Notes
-This repository currently contains the **architecture skeleton**.
-Implementation will be added incrementally.
